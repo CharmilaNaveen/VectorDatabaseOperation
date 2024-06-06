@@ -6,7 +6,7 @@ This project implements a simple vector-based document storage and retrieval sys
 ```sh
 ├── app
 │ ├── Documents
-│ │ └── sample_document4.txt # Sample Document for Crud Operation
+│ │ └── sample_document.txt # Sample Document for Crud Operation
 │ ├── main.py # FastAPI application
 │ ├── vectordb.pkl # Pickle file for saving/loading database state
 │ ├── vectordb.py # VectorDB implementation
