@@ -41,7 +41,7 @@ class VectorDB:
         """
         return list(self.collections.keys())
 
-    def insert_document(self, collection_name, doc_name, text):
+    def insert_documents(self, collection_name, doc_name, text):
         """
         Insert a new document into a specified collection.
         """
@@ -58,6 +58,41 @@ class VectorDB:
         collection['doc_names'].append(doc_name)
         self.doc_name_map[doc_name] = text
         return f"Document '{doc_name}' inserted into collection '{collection_name}'."
+
+    def insert_documents_from_directory(self, collection_name):
+        """
+        Insert all text files from a directory into a specified collection.
+        """
+        if collection_name not in self.collections:
+            raise ValueError(f"Collection '{collection_name}' does not exist.")
+        directory_path = r'Documents'
+        if not os.path.isdir(directory_path):
+            raise ValueError(f"The directory '{directory_path}' does not exist.")
+        texts = []
+        doc_names = []
+        for filename in os.listdir(directory_path):
+            print(filename)
+            if filename.endswith(".txt"):
+                file_path = os.path.join(directory_path, filename)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    text = file.read()
+                    texts.append(text)
+                    doc_names.append(filename)
+
+        # Encode the texts into vectors
+        vectors = self.model.encode(texts)
+
+        collection = self.collections[collection_name]
+        for doc_name, vector, text in zip(doc_names, vectors, texts):
+            if doc_name in self.doc_name_map:
+                raise ValueError(f"Document name '{doc_name}' already exists in the database.")
+            collection['index'].add(np.array([vector], dtype=np.float32))
+            collection['vectors'].append(vector)
+            collection['doc_names'].append(doc_name)
+            self.doc_name_map[doc_name] = text
+
+        return f"Inserted {len(texts)} documents from '{directory_path}' into collection '{collection_name}'."
+
 
     def update_document(self, collection_name, doc_name, new_text):
         """
@@ -97,6 +132,49 @@ class VectorDB:
         collection['doc_names'].remove(doc_name)
         del self.doc_name_map[doc_name]
         return f"Document '{doc_name}' deleted from collection '{collection_name}'."
+
+
+    def update_documents_from_directory(self, collection_name, directory_path='Documents'):
+        """
+        Update all text files from a directory in a specified collection.
+        """
+        if collection_name not in self.collections:
+            raise ValueError(f"Collection '{collection_name}' does not exist.")
+
+        if not os.path.isdir(directory_path):
+            raise ValueError(f"The directory '{directory_path}' does not exist.")
+
+        texts = []
+        doc_names = []
+        for filename in os.listdir(directory_path):
+            if filename.endswith(".txt"):
+                file_path = os.path.join(directory_path, filename)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    text = file.read()
+                    texts.append(text)
+                    doc_names.append(filename)
+
+        # Encode the texts into vectors
+        vectors = self.model.encode(texts)
+
+        collection = self.collections[collection_name]
+        for doc_name, vector, text in zip(doc_names, vectors, texts):
+            if doc_name in self.doc_name_map:
+                # Update the existing document vector
+                idx = collection['doc_names'].index(doc_name)
+                collection['index'].remove_ids(np.array([idx], dtype=np.int64))
+                collection['index'].add(np.array([vector], dtype=np.float32))
+                collection['vectors'][idx] = vector
+                self.doc_name_map[doc_name] = text
+            else:
+                # Insert as new document
+                collection['index'].add(np.array([vector], dtype=np.float32))
+                collection['vectors'].append(vector)
+                collection['doc_names'].append(doc_name)
+                self.doc_name_map[doc_name] = text
+
+        return f"Updated {len(texts)} documents from '{directory_path}' in collection '{collection_name}'."
+
 
     def retrieve_documents(self, collection_name, query, top_n=5):
         """
@@ -140,3 +218,5 @@ class VectorDB:
                 return pickle.load(file)
         else:
             return VectorDB()
+
+

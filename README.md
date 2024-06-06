@@ -5,15 +5,19 @@ This project implements a simple vector-based document storage and retrieval sys
 ## Project Structure
 ```sh
 ├── app
+│ ├── Documents
+│ │ └── sample_document4.txt # Sample Document for Crud Operation
 │ ├── main.py # FastAPI application
+│ ├── vectordb.pkl # Pickle file for saving/loading database state
 │ ├── vectordb.py # VectorDB implementation
 │ ├── vectordb_model.py # VectorDB model implementation
 │ ├── vectordb_routes.py # VectorDB routes implementation
-│ └── sample_document.txt # Sample document for testing
 ├── tests
+│ ├── Documents
+│ │ └── doc1.txt # Sample Document1 for testing Crud Operation
+│ │ └── doc2.txt # Sample Document2 for testing Crud Operation
 │ └── test_vectordb.py # Unit tests
 ├── pytest.ini # To run the unit tests
-├── vectordb.pkl # Pickle file for saving/loading database state
 ├── requirements.txt # Project dependencies
 └── README.md # This file
 ```
@@ -31,12 +35,11 @@ This project implements a simple vector-based document storage and retrieval sys
 
 1. **Clone the repository**:
    ```sh
-   git clone https://github.com/yourusername/vectordb-fastapi.git
-   cd vectordb-fastapi
+   git clone <repository-url>
    
 2. **Create and activate a virtual environment**:
    ```sh
-   python -m venv venv
+   python -m venv 
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
 
 3. **Install the required packages**:
@@ -54,11 +57,12 @@ This project implements a simple vector-based document storage and retrieval sys
 2. **Access the API documentation**:
 Open your web browser and navigate to http://127.0.0.1:8000/docs to view and interact with the API.
 
+
 ### Usage
 #### Endpoints
-**Create Collection**: POST /collections/{collection_name}     
-**Insert Document**: POST /collections/{collection_name}/documents    
-**Update Document**: PUT /collections/{collection_name}/documents/{doc_name}  
+**Create Collection**: POST /create_collections     
+**Insert Document**: POST /insert_documents_from_directory    
+**Update Document**: PUT /update_documents_from_directory 
 **Delete Document**: DELETE /collections/{collection_name}/documents/{doc_name}  
 **Retrieve Documents**: POST /collections/{collection_name}/search
 
@@ -66,26 +70,48 @@ Open your web browser and navigate to http://127.0.0.1:8000/docs to view and int
 #### Create a Collection:
 
    ```sh
-   curl -X POST "http://127.0.0.1:8000/collections/my_collection"
+curl -X 'POST' \
+  'http://localhost:8000/collections/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "Collection_name",
+  "dimension": 384
+}'
  ```
+   
    
 #### Insert a Document:
 
    ```sh
-   curl -X POST "http://127.0.0.1:8000/collections/my_collection/documents" -H "Content-Type: application/json" -d '{"doc_name": "doc1", "text": "This is a sample document."}'
-   ```
+curl -X 'POST' \
+  'http://localhost:8000/insert_documents_from_directory' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "collection_name": "collection_name"
+}'
+  ```
 
 #### Update a Document:
 
    ```sh
-   curl -X PUT "http://127.0.0.1:8000/collections/my_collection/documents/doc1" -H "Content-Type: application/json" -d '{"text": "This is an updated document."}'
+curl -X 'PUT' \
+  'http://localhost:8000/update_documents_from_directory' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "collection_name": "collection_name"
+}'
    ```
 
 #### Delete a Document:
 
    ```sh
-   curl -X DELETE "http://127.0.0.1:8000/collections/my_collection/documents/doc1"
-   ```
+curl -X 'DELETE' \
+  'http://localhost:8000/collections/{collection_name}/documents/{document_name}' \
+  -H 'accept: application/json'
+  ```
 
 #### Retrieve Documents:
 
@@ -121,9 +147,5 @@ The VectorDB class includes methods for saving the state to a file (vectordb.pkl
    db.save('vectordb.pkl')
    ```
 
-### Load the database state:
 
-   ``` sh
-   db = VectorDB.load('vectordb.pkl')
-   ```
 

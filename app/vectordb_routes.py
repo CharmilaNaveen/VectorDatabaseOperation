@@ -1,13 +1,15 @@
+import os
+
 from fastapi import FastAPI, HTTPException
 from app.vectordb import VectorDB
-from app.vectordb_model import Collection, Document, Query
+from app.vectordb_model import Collection, Document, Query, DirectoryRequest
 
 # Initialize the FastAPI app
 app = FastAPI()
 # Load the VectorDB instance from the default file
 db = VectorDB.load()
 
-@app.post("/collections/")
+@app.post("/create_collections")
 def create_collection(collection: Collection):
     """
     Endpoint to create a new collection.
@@ -26,29 +28,30 @@ def get_collections():
     """
     return db.get_collection_count()
 
-@app.post("/collections/{collection_name}/documents/")
-def insert_document(collection_name: str, document: Document):
+
+@app.post("/insert_documents_from_directory")
+def insert_documents_from_directory(request: DirectoryRequest):
     """
-    Endpoint to insert a new document into a collection.
+    Endpoint to insert a new document into a collection by providing the document path.
     """
     try:
-        db.insert_document(collection_name, document.doc_name, document.text)
-        db.save()
-        return {"message": f"Document '{document.doc_name}' inserted into collection '{collection_name}'."}
+        result = db.insert_documents_from_directory(request.collection_name)
+        return {"message": result}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.put("/collections/{collection_name}/documents/{doc_name}")
-def update_document(collection_name: str, doc_name: str, new_text: str):
+
+@app.put("/update_documents_from_directory")
+def update_documents_from_directory(request: DirectoryRequest):
     """
     Endpoint to update an existing document in a collection.
     """
     try:
-        db.update_document(collection_name, doc_name, new_text)
-        db.save()
-        return {"message": f"Document '{doc_name}' in collection '{collection_name}' updated."}
+        result = db.update_documents_from_directory(request.collection_name)
+        return {"message": result}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @app.delete("/collections/{collection_name}/documents/{doc_name}")
 def delete_document(collection_name: str, doc_name: str):

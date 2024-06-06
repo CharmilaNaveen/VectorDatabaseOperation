@@ -8,8 +8,8 @@ class Document(BaseModel):
         doc_name (str): The unique name of the document.
         text (str): The text content of the document.
     """
-    doc_name: str
-    text: str
+    doc_path: str
+
 
 class Query(BaseModel):
     """
@@ -30,3 +30,7 @@ class Collection(BaseModel):
     """
     name: str
     dimension: int = 384
+
+
+class DirectoryRequest(BaseModel):
+    collection_name: str
